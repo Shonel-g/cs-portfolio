@@ -24,10 +24,18 @@ The tool bypasses high-level abstractions and interacts directly with the OS net
     *   If the connection times out or returns an error, the port is considered Closed or Filtered.
 
 ### 🚀 Roadmap
-*   **v1.0:** Basic Port Detection (Current).
+*   **v1.0:** Basic Port Detection.
+*   **Feature:** Core socket connectivity logic (`socket.connect_ex`).
+*   **Function:** Identifies Open vs Closed ports based on TCP response codes.  
 <img width="321" height="49" alt="net-audit v1.0" src="https://github.com/user-attachments/assets/e1f2a64a-b888-4f0a-9f9d-00c340bf2b97" />
 
 *   **v1.1:** Banner Grabbing (Service Version Detection).
+*   **Feature:** Added service fingerprinting capability.
+*   **Technical Detail:** Upon establishing a TCP connection (3-way handshake), the script now attempts to `recv()` data bytes immediately.
+*   **Result:** Successfully retrieves banners from "chatty" protocols like SSH, FTP, and SMTP to identify software versions (e.g., `OpenSSH 6.6.1p1`).
+*   **CLI Update:** Migrated from hardcoded variables to `argparse`. Usage: `python3 scanner.py <target_domain_or_ip>`.
+<img width="537" height="76" alt="net-audit v1.1" src="https://github.com/user-attachments/assets/1b10adb5-6f42-4133-be75-80c8d8a09411" />
+
 *   **v1.2:** Multi-threading for performance optimization.
 
 ---
