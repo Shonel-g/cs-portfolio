@@ -37,6 +37,11 @@ The tool bypasses high-level abstractions and interacts directly with the OS net
 <img width="537" height="76" alt="net-audit v1.1" src="https://github.com/user-attachments/assets/1b10adb5-6f42-4133-be75-80c8d8a09411" />
 
 *   **v1.2:** Multi-threading for performance optimization.
+*   **Feature:** Implemented concurrent scanning using `ThreadPoolExecutor`.
+*   **Impact:** Drastically reduced scan time. The tool can now scan 1,000 ports in under 10 seconds (previously ~15 minutes sequentially).
+*   **Logic:** Replaced the sequential `for` loop with a thread pool management system that assigns port checks to 50+ concurrent worker threads.
+*   **CLI Update:** Added arguments `--ports` (range limit) and `--threads` (concurrency level).
+<img width="706" height="113" alt="net-audit v1.2" src="https://github.com/user-attachments/assets/415ea74e-bd2e-48ec-b6c7-8d5dae7722dc" />
 
 ---
 
