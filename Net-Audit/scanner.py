@@ -1,49 +1,72 @@
 import socket
-import sys
+import argparse
+
+def grab_banner(ip, port):
+    """
+    Attempts to retrieve the service banner from an open port.
+    """
+    try:
+        # We create a new socket specifically for banner grabbing
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.settimeout(2) # Give a bit more time for the server to speak
+        s.connect((ip, port))
+        
+        # Some protocols (like HTTP) wait for the client to speak first.
+        # Others (like SSH, FTP, SMTP) speak immediately upon connection.
+        # We try to receive data. 
+        
+        # Note: For HTTP ports, we might need to send a trigger byte, 
+        # but for this basic version, we listen for "chatty" services.
+        banner = s.recv(1024) # Read up to 1024 bytes
+        s.close()
+        
+        return banner.decode().strip() # Convert bytes to string and remove spaces
+    except:
+        return None
 
 def scan_port(ip, port):
     """
-    Scans a specific port on the target IP.
+    Checks if a port is open and attempts to grab the banner.
     """
     try:
-        # 1. Create the socket object
-        # socket.AF_INET = IPv4 Address Family
-        # socket.SOCK_STREAM = TCP Protocol
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        
-        # 2. Set timeout
-        # If the port doesn't respond within 1 second, we assume it's filtered/closed.
-        # This prevents the script from hanging on unresponsive hosts.
         s.settimeout(1)
-        
-        # 3. Attempt connection
-        # connect_ex is like connect(), but returns an error indicator instead of raising an exception.
-        # 0 = Success (Port Open)
         result = s.connect_ex((ip, port))
-        
-        if result == 0:
-            print(f"[+] Port {port} is OPEN")
-        else:
-            # Optional: You could print closed ports here, but it creates too much noise.
-            pass
-        
-        # 4. Always close the connection
         s.close()
         
-    except socket.error as e:
-        print(f"[!] Socket error: {e}")
+        if result == 0:
+            print(f"[+] Port {port} is OPEN", end=' ')
+            
+            # If open, try to identify the service
+            banner = grab_banner(ip, port)
+            if banner:
+                print(f"--> Service: {banner}")
+            else:
+                print(f"--> Service: Unknown (No banner received)")
+        else:
+            pass # Port closed
+            
     except Exception as e:
-        print(f"[!] General error: {e}")
+        print(f"[!] Error scanning port {port}: {e}")
+
+def main():
+    # CLI Argument Parsing
+    parser = argparse.ArgumentParser(description="Net-Audit: TCP Port Scanner & Banner Grabber")
+    parser.add_argument("target", help="Target IP address or Domain (e.g., scanme.nmap.org)")
+    args = parser.parse_args()
+    
+    # Convert domain to IP if necessary
+    target_ip = socket.gethostbyname(args.target)
+    
+    print(f"[*] Starting scan on target: {target_ip}")
+    print("[*] Scanning top common ports...")
+    
+    # List of interesting ports to scan
+    # 21: FTP, 22: SSH, 25: SMTP, 80: HTTP, 443: HTTPS
+    ports = [21, 22, 25, 80, 443, 3306] 
+    
+    for port in ports:
+        scan_port(target_ip, port)
 
 if __name__ == "__main__":
-    # Basic configuration for testing
-    # In the next version, we will handle arguments via CLI
-    target_ip = "8.8.8.8"  # Google DNS
-    
-    print(f"[*] Starting generic TCP scan on {target_ip}...")
-    
-    # Scanning common ports
-    target_ports = [21, 22, 53, 80, 443]
-    
-    for port in target_ports:
-        scan_port(target_ip, port)
+    main()
